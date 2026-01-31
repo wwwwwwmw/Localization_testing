@@ -32,6 +32,13 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+        <!-- JUnit Vintage Engine de chay JUnit 4 tests tren JUnit Platform -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -41,8 +48,8 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.14.0</version>
-            <scope>compile</scope>
+            <version>5.10.0</version>
+            <scope>test</scope>
         </dependency>
         <!-- JSON Processing -->
         <dependency>

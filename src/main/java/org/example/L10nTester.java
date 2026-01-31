@@ -228,7 +228,9 @@ public class L10nTester {
 
         System.out.println("[DANG TAI] " + PRESTASHOP_URL);
         driver.get(PRESTASHOP_URL);
-        sleep(5000);
+
+        // Thay the sleep(5000) bang WebDriverWait
+        waitForPageLoad();
 
         if (!switchToIframe()) {
             System.err.println("[LOI] Khong the tim thay iframe!");
@@ -241,7 +243,8 @@ public class L10nTester {
         log("============================================================");
 
         switchLanguage(langCode);
-        sleep(3000);
+        // Thay the sleep(3000) bang WebDriverWait
+        waitForLanguageSwitch(langCode);
 
         String actualLang = detectCurrentLanguage();
         if (actualLang != null && actualLang.equals(langCode)) {
@@ -1012,18 +1015,19 @@ public class L10nTester {
     private boolean switchToIframe() {
         try {
             driver.switchTo().defaultContent();
-            sleep(500);
 
-            WebDriverWait iframeWait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            // Su dung ExpectedConditions.frameToBeAvailableAndSwitchToIt thay cho sleep
+            WebDriverWait iframeWait = new WebDriverWait(driver, Duration.ofSeconds(15));
             String[] iframeSelectors = { "#framelive", "iframe[name='framelive']", "iframe" };
 
             for (String selector : iframeSelectors) {
                 try {
-                    WebElement iframe = iframeWait.until(
-                            ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
-                    iframeWait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(iframe));
+                    // Su dung ExpectedConditions de cho iframe san sang
+                    iframeWait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.cssSelector(selector)));
+
+                    // Cho body trong iframe load xong
+                    iframeWait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
                     System.out.println("[OK] Da chuyen vao iframe");
-                    sleep(500);
                     return true;
                 } catch (Exception ignored) {
                 }
@@ -1054,6 +1058,68 @@ public class L10nTester {
             Thread.sleep(ms);
         } catch (InterruptedException ignored) {
         }
+    }
+
+    // ==================== WEBDRIVERWAIT HELPER METHODS ====================
+
+    /**
+     * Cho trang load xong (thay the cho sleep)
+     */
+    private void waitForPageLoad() {
+        try {
+            wait.until(driver -> ((JavascriptExecutor) driver)
+                    .executeScript("return document.readyState").equals("complete"));
+
+            // Cho them mot chut de cac element JavaScript render
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+        } catch (Exception e) {
+            // Fallback to sleep neu WebDriverWait that bai
+            sleep(3000);
+        }
+    }
+
+    /**
+     * Cho iframe san sang va switch vao
+     * Su dung ExpectedConditions.frameToBeAvailableAndSwitchToIt
+     */
+    private boolean waitForIframeAndSwitch(String iframeSelector) {
+        try {
+            WebDriverWait iframeWait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            iframeWait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.cssSelector(iframeSelector)));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Cho ngon ngu chuyen xong
+     */
+    private void waitForLanguageSwitch(String langCode) {
+        try {
+            // Cho URL thay doi chua language code
+            wait.until(driver -> driver.getCurrentUrl().contains("/#/" + getPrestaShopLangCode(langCode)));
+
+            // Cho trang load lai
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+        } catch (Exception e) {
+            // Fallback
+            sleep(2000);
+        }
+    }
+
+    /**
+     * Cho element xuat hien va co the click
+     */
+    private WebElement waitForClickable(String cssSelector) {
+        return wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(cssSelector)));
+    }
+
+    /**
+     * Cho element xuat hien
+     */
+    private WebElement waitForPresence(String cssSelector) {
+        return wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(cssSelector)));
     }
 
     private void cleanup() {
