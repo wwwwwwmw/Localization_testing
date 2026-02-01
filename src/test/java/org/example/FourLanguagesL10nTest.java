@@ -4,6 +4,8 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.*;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -14,34 +16,38 @@ import java.time.Duration;
 import java.util.*;
 
 /**
- * PrestaShopL10nTest - Integration/UI Tests cho PrestaShop Demo
+ * FourLanguagesL10nTest - Test L10n cho 4 ngon ngu chinh
  * 
- * [DEPRECATED] - Da chuyen sang dung FourLanguagesL10nTest.java de test 4 ngon
- * ngu: en, fr, vi, ar
- * File nay duoc giu lai de tham khao va co the su dung lai sau.
+ * Ngon ngu duoc test:
+ * 1. en - English (Latin, dot decimal)
+ * 2. fr - Français (Latin, comma decimal)
+ * 3. vi - Tiếng Việt (Latin, comma decimal, Vietnamese)
+ * 4. ar - العربية (RTL, Arabic script)
  * 
- * Su dung JUnit 4 voi:
- * - @Before: Khoi tao ChromeDriver va switch vao iframe #framelive
- * - @After: Dong trinh duyet sau khi test xong
- * - @Test: Kiem tra tung khia canh (Currency, Date, Text)
- * 
- * Flow:
- * 1. JUnit Runner khoi dong
- * 2. @Before: Mo Chrome -> Vao PrestaShop Demo -> Cho va Switch vao Iframe
- * 3. @Test: Lay du lieu tu LanguageConfig -> Goi Checker -> Assert
- * 4. @After: Dong trinh duyet, xuat bao cao
- * 
- * @deprecated Use FourLanguagesL10nTest instead for testing en, fr, vi, ar
- *             languages
+ * Su dung JUnit 4 Parameterized de chay test cho nhieu ngon ngu
  */
-@Ignore("Deprecated - Use FourLanguagesL10nTest for 4 main languages: en, fr, vi, ar")
-public class PrestaShopL10nTest {
+@RunWith(Parameterized.class)
+public class FourLanguagesL10nTest {
 
     private static final String PRESTASHOP_URL = "https://demo.prestashop.com/";
     private static final int TIMEOUT_SECONDS = 15;
 
-    // Test language - co the thay doi de test ngon ngu khac
-    private static final String TEST_LANGUAGE = "fr"; // French la default
+    // ==================== 4 NGON NGU CHINH ====================
+    @Parameterized.Parameters(name = "{0} - {1}")
+    public static Collection<Object[]> languages() {
+        return Arrays.asList(new Object[][] {
+                { "en", "English" },
+                { "fr", "Français" },
+                { "vi", "Tiếng Việt" },
+                { "ar", "العربية" }
+        });
+    }
+
+    @Parameterized.Parameter(0)
+    public String langCode;
+
+    @Parameterized.Parameter(1)
+    public String langName;
 
     protected WebDriver driver;
     protected WebDriverWait wait;
@@ -56,12 +62,11 @@ public class PrestaShopL10nTest {
     public TestWatcher screenshotOnFailure = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            // Tu dong chup screenshot khi test that bai
             if (driver != null) {
                 L10nError error = L10nError.fromAssertionError(
                         driver,
                         e instanceof AssertionError ? (AssertionError) e : new AssertionError(e.getMessage()),
-                        TEST_LANGUAGE,
+                        langCode,
                         driver.getCurrentUrl());
                 errors.add(error);
                 System.out.println("[SCREENSHOT] Captured on failure: " + error.getScreenshotFilename());
@@ -70,7 +75,7 @@ public class PrestaShopL10nTest {
 
         @Override
         protected void succeeded(Description description) {
-            System.out.println("[PASS] " + description.getMethodName());
+            System.out.println("[PASS] " + description.getMethodName() + " for " + langCode);
         }
     };
 
@@ -79,8 +84,8 @@ public class PrestaShopL10nTest {
     @BeforeClass
     public static void setUpClass() {
         System.out.println("============================================================");
-        System.out.println("PRESTASHOP L10N INTEGRATION TESTS");
-        System.out.println("Test Language: " + TEST_LANGUAGE);
+        System.out.println("FOUR LANGUAGES L10N INTEGRATION TESTS");
+        System.out.println("Languages: en, fr, vi, ar");
         System.out.println("============================================================");
         WebDriverManager.chromedriver().setup();
     }
@@ -88,11 +93,12 @@ public class PrestaShopL10nTest {
     @Before
     public void setUp() {
         System.out.println("\n------------------------------------------------------------");
+        System.out.println("Testing Language: " + langCode + " (" + langName + ")");
 
         errors = new ArrayList<>();
-        config = LanguageConfig.get(TEST_LANGUAGE);
+        config = LanguageConfig.get(langCode);
 
-        Assert.assertNotNull("Language config should exist for " + TEST_LANGUAGE, config);
+        Assert.assertNotNull("Language config should exist for " + langCode, config);
 
         // Khoi tao ChromeDriver
         ChromeOptions options = new ChromeOptions();
@@ -111,15 +117,13 @@ public class PrestaShopL10nTest {
 
     @After
     public void tearDown() {
-        // In cac loi da thu thap
         if (!errors.isEmpty()) {
-            System.out.println("\n[ERRORS FOUND: " + errors.size() + "]");
+            System.out.println("\n[ERRORS FOUND: " + errors.size() + " for " + langCode + "]");
             for (L10nError error : errors) {
                 System.out.println("  - " + error);
             }
         }
 
-        // Dong trinh duyet
         if (driver != null) {
             driver.quit();
         }
@@ -128,50 +132,32 @@ public class PrestaShopL10nTest {
     @AfterClass
     public static void tearDownClass() {
         System.out.println("\n============================================================");
-        System.out.println("ALL INTEGRATION TESTS COMPLETED");
+        System.out.println("ALL FOUR LANGUAGES TESTS COMPLETED");
         System.out.println("============================================================");
     }
 
     // ==================== HELPER METHODS ====================
 
-    /**
-     * Mo PrestaShop Demo va switch vao iframe
-     */
     private void openPrestaShopDemo() {
         System.out.println("[SETUP] Opening PrestaShop Demo...");
         driver.get(PRESTASHOP_URL);
-
-        // Cho trang load
         waitForPageLoad();
-
-        // Switch vao iframe su dung ExpectedConditions.frameToBeAvailableAndSwitchToIt
         switchToIframe();
-
-        // Chuyen ngon ngu
-        switchLanguage(TEST_LANGUAGE);
-
+        switchLanguage(langCode);
         System.out.println("[SETUP] Ready for testing in " + config.languageName);
     }
 
-    /**
-     * Cho trang load xong
-     */
     private void waitForPageLoad() {
         wait.until(driver -> js.executeScript("return document.readyState").equals("complete"));
     }
 
-    /**
-     * Switch vao iframe #framelive su dung WebDriverWait
-     */
     private boolean switchToIframe() {
         try {
-            // Su dung ExpectedConditions.frameToBeAvailableAndSwitchToIt
             wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("framelive")));
             System.out.println("[OK] Switched to iframe #framelive");
             return true;
         } catch (Exception e) {
             try {
-                // Fallback - try any iframe
                 wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.cssSelector("iframe")));
                 System.out.println("[OK] Switched to iframe (fallback)");
                 return true;
@@ -182,25 +168,19 @@ public class PrestaShopL10nTest {
         }
     }
 
-    /**
-     * Chuyen ngon ngu
-     */
     private void switchLanguage(String langCode) {
         try {
-            // Click language selector
             WebElement langDropdown = wait.until(ExpectedConditions.elementToBeClickable(
                     By.cssSelector(".language-selector, #_desktop_language_selector, [class*='language']")));
             langDropdown.click();
 
-            Thread.sleep(500); // Cho dropdown mo
+            Thread.sleep(500);
 
-            // Click ngon ngu can chon
             String psCode = getPrestaShopLangCode(langCode);
             WebElement langOption = wait.until(ExpectedConditions.elementToBeClickable(
                     By.cssSelector("a[href*='/" + psCode + "/'], a[data-iso-code='" + langCode + "']")));
             langOption.click();
 
-            // Cho trang load lai va switch lai vao iframe
             waitForPageLoad();
             switchToIframe();
 
@@ -213,7 +193,6 @@ public class PrestaShopL10nTest {
     private String getPrestaShopLangCode(String isoCode) {
         Map<String, String> map = new HashMap<>();
         map.put("vi", "vn");
-        map.put("sl", "si");
         return map.getOrDefault(isoCode, isoCode);
     }
 
@@ -221,9 +200,8 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testCurrencyDisplay() {
-        System.out.println("[TEST] Currency Display");
+        System.out.println("[TEST] Currency Display for " + langCode);
 
-        // Tim cac element chua gia
         List<WebElement> priceElements = driver.findElements(By.cssSelector(
                 ".price, .product-price, .current-price, [class*='price']"));
 
@@ -241,7 +219,6 @@ public class PrestaShopL10nTest {
                 }
                 checkedPrices.add(priceText);
 
-                // Su dung static method tu CurrencyChecker
                 CurrencyChecker.CurrencyCheckResult result = CurrencyChecker.validateCurrency(priceText, config);
 
                 if (result.isValid) {
@@ -250,7 +227,7 @@ public class PrestaShopL10nTest {
                 } else {
                     System.out.println("  [ERROR] Price: " + priceText + " - " + result.errorMessage);
                     errors.add(new L10nError("CURRENCY_ERROR", "Invalid currency format",
-                            result.errorMessage, driver.getCurrentUrl(), TEST_LANGUAGE));
+                            result.errorMessage, driver.getCurrentUrl(), langCode));
                     errorCount++;
                 }
 
@@ -260,8 +237,6 @@ public class PrestaShopL10nTest {
         }
 
         System.out.println("  >> Summary: " + validCount + " valid, " + errorCount + " errors");
-
-        // Assert khong co loi nghiem trong
         Assert.assertEquals("Should have no currency errors", 0, errorCount);
     }
 
@@ -269,23 +244,21 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testDateFormat() {
-        System.out.println("[TEST] Date Format");
+        System.out.println("[TEST] Date Format for " + langCode);
 
         String bodyText = driver.findElement(By.tagName("body")).getText();
-
-        // Trich xuat cac ngay tu trang
         List<String> dates = DateChecker.extractDates(bodyText);
 
         System.out.println("  Found " + dates.size() + " date(s) on page");
 
         int errorCount = 0;
         for (String dateStr : dates) {
-            DateChecker.DateCheckResult result = DateChecker.validateDate(dateStr, TEST_LANGUAGE, config.datePattern);
+            DateChecker.DateCheckResult result = DateChecker.validateDate(dateStr, langCode, config.datePattern);
 
             if (!result.isValid) {
                 System.out.println("  [ERROR] Date: " + dateStr + " - " + result.errorMessage);
                 errors.add(new L10nError("DATE_FORMAT_ERROR", "Invalid date format",
-                        result.errorMessage, driver.getCurrentUrl(), TEST_LANGUAGE));
+                        result.errorMessage, driver.getCurrentUrl(), langCode));
                 errorCount++;
             } else if (result.hasEnglishMonth) {
                 System.out.println("  [WARNING] Date has English month: " + dateStr);
@@ -294,7 +267,6 @@ public class PrestaShopL10nTest {
             }
         }
 
-        // Khong bat buoc co ngay tren trang
         if (!dates.isEmpty()) {
             Assert.assertEquals("Should have no date format errors", 0, errorCount);
         }
@@ -304,15 +276,13 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testUntranslatedText() {
-        System.out.println("[TEST] Untranslated Text Detection");
+        System.out.println("[TEST] Untranslated Text Detection for " + langCode);
 
         // Khong kiem tra trang tieng Anh
-        Assume.assumeFalse("Skip for English language", "en".equals(TEST_LANGUAGE));
+        Assume.assumeFalse("Skip for English language", "en".equals(langCode));
 
         String pageText = driver.findElement(By.tagName("body")).getText();
-
-        // Tim van ban tieng Anh chua dich
-        List<String> untranslated = TextChecker.findUntranslatedEnglishText(pageText, TEST_LANGUAGE);
+        List<String> untranslated = TextChecker.findUntranslatedEnglishText(pageText, langCode);
 
         if (!untranslated.isEmpty()) {
             System.out.println("  [WARNING] Found untranslated English text:");
@@ -320,11 +290,10 @@ public class PrestaShopL10nTest {
                 System.out.println("    - " + text);
                 errors.add(new L10nError("UNTRANSLATED_TEXT", "English text found",
                         "Found '" + text + "' in " + config.languageName + " page",
-                        driver.getCurrentUrl(), TEST_LANGUAGE));
+                        driver.getCurrentUrl(), langCode));
             }
         }
 
-        // Canh bao nhung khong that bai test
         System.out.println("  >> Found " + untranslated.size() + " untranslated text(s)");
     }
 
@@ -332,11 +301,9 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testExpectedKeywords() {
-        System.out.println("[TEST] Expected Keywords");
+        System.out.println("[TEST] Expected Keywords for " + langCode);
 
         String pageText = driver.findElement(By.tagName("body")).getText();
-
-        // Kiem tra cac tu khoa mong doi
         Map<String, Boolean> keywordResults = TextChecker.checkExpectedKeywords(pageText, config.expectedKeywords);
 
         int foundCount = 0;
@@ -356,7 +323,6 @@ public class PrestaShopL10nTest {
         System.out.println("  >> Coverage: " + String.format("%.1f%%", coverage * 100) +
                 " (" + foundCount + "/" + config.expectedKeywords.length + ")");
 
-        // Assert it nhat 50% tu khoa duoc tim thay
         Assert.assertTrue("Should find at least 50% of expected keywords", coverage >= 0.5);
     }
 
@@ -364,15 +330,15 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testTextOverflow() {
-        System.out.println("[TEST] Text Overflow (Boundary Value Analysis)");
+        System.out.println("[TEST] Text Overflow for " + langCode);
 
-        // Chi kiem tra cho cac ngon ngu co van ban dai
-        if (!TextChecker.isLongTextLanguage(TEST_LANGUAGE)) {
-            System.out.println("  [SKIP] " + TEST_LANGUAGE + " is not a long-text language");
+        // Kiem tra cho cac ngon ngu co van ban dai
+        // fr va vi thuong co van ban dai hon en
+        if (!TextChecker.isLongTextLanguage(langCode) && !"fr".equals(langCode) && !"vi".equals(langCode)) {
+            System.out.println("  [SKIP] " + langCode + " is not a long-text language");
             return;
         }
 
-        // Tim cac nut quan trong
         List<WebElement> buttons = driver.findElements(By.cssSelector(
                 ".btn, button, .add-to-cart, [class*='btn']"));
 
@@ -384,7 +350,6 @@ public class PrestaShopL10nTest {
                 if (text.isEmpty() || text.length() < 3)
                     continue;
 
-                // Lay offsetWidth va scrollWidth
                 int offsetWidth = ((Long) js.executeScript("return arguments[0].offsetWidth;", button)).intValue();
                 int scrollWidth = ((Long) js.executeScript("return arguments[0].scrollWidth;", button)).intValue();
 
@@ -393,7 +358,7 @@ public class PrestaShopL10nTest {
                             ", scrollWidth=" + scrollWidth);
                     errors.add(new L10nError("TEXT_OVERFLOW", "Text overflow detected",
                             "Button '" + text + "' is overflowing",
-                            driver.getCurrentUrl(), TEST_LANGUAGE));
+                            driver.getCurrentUrl(), langCode));
                     overflowCount++;
                 }
 
@@ -405,19 +370,19 @@ public class PrestaShopL10nTest {
         System.out.println("  >> Found " + overflowCount + " overflow(s)");
     }
 
-    // ==================== TEST: RTL LAYOUT ====================
+    // ==================== TEST: RTL LAYOUT (Dac biet cho Arabic)
+    // ====================
 
     @Test
     public void testRTLLayout() {
-        System.out.println("[TEST] RTL Layout");
+        System.out.println("[TEST] RTL Layout for " + langCode);
 
-        // Chi kiem tra cho cac ngon ngu RTL
+        // Chi kiem tra cho Arabic
         if (!config.isRTL) {
-            System.out.println("  [SKIP] " + TEST_LANGUAGE + " is not RTL");
+            System.out.println("  [SKIP] " + langCode + " is not RTL");
             return;
         }
 
-        // Kiem tra dir attribute cua html hoac body
         WebElement html = driver.findElement(By.tagName("html"));
         String dir = html.getAttribute("dir");
 
@@ -435,31 +400,20 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testPageTitle() {
-        System.out.println("[TEST] Page Title");
+        System.out.println("[TEST] Page Title for " + langCode);
 
         String title = driver.getTitle();
         System.out.println("  Page title: " + title);
 
         Assert.assertNotNull("Page should have a title", title);
         Assert.assertFalse("Page title should not be empty", title.isEmpty());
-
-        // Canh bao neu title la tieng Anh cho trang khong phai EN
-        if (!"en".equals(TEST_LANGUAGE)) {
-            // Kiem tra xem title co chua tu tieng Anh khong
-            String[] englishWords = { "Demo", "Shop", "Store", "PrestaShop" };
-            for (String word : englishWords) {
-                if (title.contains(word)) {
-                    System.out.println("  [INFO] Title contains English word: " + word);
-                }
-            }
-        }
     }
 
     // ==================== TEST: NAVIGATION MENU ====================
 
     @Test
     public void testNavigationMenu() {
-        System.out.println("[TEST] Navigation Menu");
+        System.out.println("[TEST] Navigation Menu for " + langCode);
 
         List<WebElement> menuItems = driver.findElements(By.cssSelector(
                 ".top-menu a, nav a, .menu a, .nav-link"));
@@ -468,7 +422,6 @@ public class PrestaShopL10nTest {
 
         System.out.println("  Found " + menuItems.size() + " menu item(s)");
 
-        // Kiem tra it nhat mot menu item co van ban
         boolean hasVisibleMenuItem = false;
         for (WebElement item : menuItems) {
             String text = item.getText().trim();
@@ -485,14 +438,13 @@ public class PrestaShopL10nTest {
 
     @Test
     public void testProductListing() {
-        System.out.println("[TEST] Product Listing");
+        System.out.println("[TEST] Product Listing for " + langCode);
 
         List<WebElement> products = driver.findElements(By.cssSelector(
                 ".product-miniature, .product-item, [class*='product']"));
 
         System.out.println("  Found " + products.size() + " product(s)");
 
-        // Kiem tra moi san pham co gia
         int productsWithPrice = 0;
         for (WebElement product : products) {
             try {
@@ -508,16 +460,131 @@ public class PrestaShopL10nTest {
         System.out.println("  Products with visible price: " + productsWithPrice);
     }
 
-    // ==================== STATIC TEST HELPER: Run for specific language
+    // ==================== TEST: DECIMAL SEPARATOR (Dac biet cho 4 ngon ngu)
     // ====================
 
-    /**
-     * Helper method de chay test cho mot ngon ngu cu the
-     * Co the goi tu main() de test nhanh
-     */
-    public static void runTestsForLanguage(String langCode) {
-        System.out.println("Running tests for: " + langCode);
-        // Can tao instance va goi cac test method
-        // Trong thuc te, nen su dung JUnit runner
+    @Test
+    public void testDecimalSeparator() {
+        System.out.println("[TEST] Decimal Separator for " + langCode);
+
+        // en: dot (.)
+        // fr, vi: comma (,)
+        // ar: dot (.) - theo chuan quoc te
+
+        String expectedSeparator = config.decimalSeparator;
+        System.out.println("  Expected decimal separator: '" + expectedSeparator + "'");
+
+        List<WebElement> priceElements = driver.findElements(By.cssSelector(
+                ".price, .product-price, .current-price"));
+
+        int correctCount = 0;
+        int totalChecked = 0;
+
+        for (WebElement element : priceElements) {
+            try {
+                String priceText = element.getText().trim();
+                if (priceText.isEmpty())
+                    continue;
+
+                totalChecked++;
+
+                // Kiem tra decimal separator
+                // Tim so co phan thap phan
+                if (priceText.matches(".*\\d+[.,]\\d{2}.*")) {
+                    boolean hasCorrectSeparator = false;
+                    if (".".equals(expectedSeparator) && priceText.matches(".*\\d+\\.\\d{2}.*")) {
+                        hasCorrectSeparator = true;
+                    } else if (",".equals(expectedSeparator) && priceText.matches(".*\\d+,\\d{2}.*")) {
+                        hasCorrectSeparator = true;
+                    }
+
+                    if (hasCorrectSeparator) {
+                        correctCount++;
+                        System.out.println("  [OK] " + priceText);
+                    } else {
+                        System.out.println("  [WARNING] Unexpected separator in: " + priceText);
+                    }
+                }
+
+            } catch (StaleElementReferenceException e) {
+                // Skip
+            }
+        }
+
+        System.out.println("  >> Checked: " + totalChecked + ", Correct separator: " + correctCount);
+    }
+
+    // ==================== TEST: CHARACTER ENCODING ====================
+
+    @Test
+    public void testCharacterEncoding() {
+        System.out.println("[TEST] Character Encoding for " + langCode);
+
+        String pageText = driver.findElement(By.tagName("body")).getText();
+
+        // Kiem tra khong co ky tu loi encoding (? hoac .)
+        boolean hasEncodingIssue = false;
+
+        // Tim cac pattern loi encoding pho bien
+        String[] brokenPatterns = { "�", "Ã¢", "Ã©", "Ã¨", "Ã", "â€" };
+
+        for (String pattern : brokenPatterns) {
+            if (pageText.contains(pattern)) {
+                System.out.println("  [ERROR] Found broken encoding: " + pattern);
+                hasEncodingIssue = true;
+            }
+        }
+
+        if (!hasEncodingIssue) {
+            System.out.println("  [OK] No encoding issues detected");
+        }
+
+        Assert.assertFalse("Should not have encoding issues", hasEncodingIssue);
+    }
+
+    // ==================== TEST: LANGUAGE SPECIFIC CHARACTERS ====================
+
+    @Test
+    public void testLanguageSpecificCharacters() {
+        System.out.println("[TEST] Language Specific Characters for " + langCode);
+
+        String pageText = driver.findElement(By.tagName("body")).getText();
+
+        boolean hasExpectedChars = false;
+        String charDescription = "";
+
+        switch (langCode) {
+            case "en":
+                // Tieng Anh - chi co ky tu Latin co ban
+                hasExpectedChars = pageText.matches(".*[a-zA-Z].*");
+                charDescription = "Latin characters";
+                break;
+            case "fr":
+                // Tieng Phap - co the co dau (é, è, ê, à, etc.)
+                hasExpectedChars = pageText.matches(".*[a-zA-ZéèêëàâäùûüôöîïçÉÈÊËÀÂÄÙÛÜÔÖÎÏÇ].*");
+                charDescription = "French accented characters";
+                break;
+            case "vi":
+                // Tieng Viet - co nhieu dau
+                hasExpectedChars = pageText
+                        .matches(".*[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ].*");
+                charDescription = "Vietnamese diacritics";
+                break;
+            case "ar":
+                // Tieng A-Rap - ky tu Arabic
+                hasExpectedChars = pageText.matches(".*[\\u0600-\\u06FF].*");
+                charDescription = "Arabic script";
+                break;
+        }
+
+        System.out.println("  Checking for: " + charDescription);
+        System.out.println("  Found expected characters: " + hasExpectedChars);
+
+        // Khong bat buoc - chi canh bao
+        if (!hasExpectedChars && !"en".equals(langCode)) {
+            System.out.println("  [WARNING] Expected " + charDescription + " but not found");
+        } else {
+            System.out.println("  [OK] " + charDescription + " present");
+        }
     }
 }
