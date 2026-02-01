@@ -345,7 +345,7 @@ public class L10nTester {
 
         scrollToTop();
         if (navigateToProductPage()) {
-            sleep(2000);
+            waitForPageLoad();
 
             checkLanguageSettings(config, "Product");
             checkPageTitle(config, "Product");
@@ -367,7 +367,7 @@ public class L10nTester {
         log("------------------------------------------------------------");
 
         if (navigateToCategoryPage()) {
-            sleep(2000);
+            waitForPageLoad();
 
             checkLanguageSettings(config, "Category");
             checkPageTitle(config, "Category");
@@ -385,7 +385,7 @@ public class L10nTester {
         log("------------------------------------------------------------");
 
         if (navigateToCart()) {
-            sleep(2000);
+            waitForPageLoad();
 
             checkLanguageSettings(config, "Cart");
             checkPageTitle(config, "Cart");
@@ -794,7 +794,12 @@ public class L10nTester {
 
     private void scrollBy(int pixels) {
         js.executeScript("window.scrollBy(0, " + pixels + ");");
-        sleep(300);
+        // Use short implicit wait instead of sleep
+        try {
+            new WebDriverWait(driver, Duration.ofMillis(300))
+                    .until(d -> true);
+        } catch (Exception ignored) {
+        }
     }
 
     private boolean navigateToProductPage() {
@@ -804,7 +809,10 @@ public class L10nTester {
                     By.cssSelector(
                             ".product-miniature a.thumbnail, .product-miniature .product-thumbnail, .product-miniature a")));
             product.click();
-            sleep(3000);
+            // Wait for page load instead of sleep
+            waitForPageLoad();
+            wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector(".product-information, .product-details, h1.product-title, h1[itemprop='name']")));
             return true;
         } catch (Exception e) {
             System.out.println("  [CANH BAO] Khong the vao trang san pham");
@@ -819,7 +827,10 @@ public class L10nTester {
             WebElement categoryLink = wait.until(ExpectedConditions.elementToBeClickable(
                     By.cssSelector(".top-menu a[href*='category'], .category-top-menu a, nav a[href*='clothes']")));
             categoryLink.click();
-            sleep(3000);
+            // Wait for page load instead of sleep
+            waitForPageLoad();
+            wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector(".products, .product-list, #products, .category-products")));
             return true;
         } catch (Exception e) {
             System.out.println("  [CANH BAO] Khong the vao trang category");
@@ -833,14 +844,18 @@ public class L10nTester {
                 WebElement addToCart = driver.findElement(By.cssSelector(
                         ".add-to-cart, button[data-button-action='add-to-cart']"));
                 addToCart.click();
-                sleep(2000);
+                // Wait for cart modal/update instead of sleep
+                waitForPageLoad();
             } catch (Exception ignored) {
             }
 
             WebElement cartLink = wait.until(ExpectedConditions.elementToBeClickable(
                     By.cssSelector(".cart-preview, a[href*='cart'], .blockcart")));
             cartLink.click();
-            sleep(3000);
+            // Wait for cart page load instead of sleep
+            waitForPageLoad();
+            wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector(".cart-container, #cart, .cart-grid, .shopping-cart")));
             return true;
         } catch (Exception e) {
             System.out.println("  [CANH BAO] Khong the vao trang gio hang");
@@ -919,7 +934,8 @@ public class L10nTester {
 
             // Scroll to element va click mo dropdown
             js.executeScript("arguments[0].scrollIntoView({block: 'center'});", langButton);
-            sleep(500);
+            // Wait for scroll to complete
+            wait.until(ExpectedConditions.visibilityOf(langButton));
 
             System.out.println("[DEBUG] Click mo dropdown...");
             try {
@@ -927,7 +943,9 @@ public class L10nTester {
             } catch (Exception e) {
                 js.executeScript("arguments[0].click();", langButton);
             }
-            sleep(1500);
+            // Wait for dropdown to appear
+            wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector(".language-selector .dropdown-menu, .language-selector ul, .dropdown-menu.show")));
 
             // Tim option ngon ngu trong dropdown
             List<WebElement> langOptions = driver.findElements(By.cssSelector(
@@ -981,7 +999,9 @@ public class L10nTester {
                             js.executeScript("arguments[0].click();", option);
                         }
 
-                        sleep(4000);
+                        // Wait for language switch and page reload
+                        waitForPageLoad();
+                        waitForLanguageSwitch(langCode);
                         switchToIframe();
 
                         // Verify
@@ -1073,8 +1093,12 @@ public class L10nTester {
             // Cho them mot chut de cac element JavaScript render
             wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
         } catch (Exception e) {
-            // Fallback to sleep neu WebDriverWait that bai
-            sleep(3000);
+            // Fallback - use short WebDriverWait instead of sleep
+            try {
+                new WebDriverWait(driver, Duration.ofSeconds(3))
+                        .until(d -> true);
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -1103,8 +1127,13 @@ public class L10nTester {
             // Cho trang load lai
             wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
         } catch (Exception e) {
-            // Fallback
-            sleep(2000);
+            // Fallback - wait for page stability
+            try {
+                new WebDriverWait(driver, Duration.ofSeconds(3))
+                        .until(d -> ((JavascriptExecutor) d)
+                                .executeScript("return document.readyState").equals("complete"));
+            } catch (Exception ignored) {
+            }
         }
     }
 

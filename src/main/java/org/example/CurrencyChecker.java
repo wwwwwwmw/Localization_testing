@@ -224,6 +224,10 @@ public class CurrencyChecker {
 
     // ==================== SELENIUM-DEPENDENT METHODS ====================
 
+    // Retry configuration for stale element handling
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 500;
+
     /**
      * Kiem tra dinh dang tien te tren trang
      */
@@ -232,44 +236,38 @@ public class CurrencyChecker {
         System.out.println("   Tien te mong doi: EUR (Euro) - mac dinh cua PrestaShop demo");
 
         try {
-            List<WebElement> priceElements = driver.findElements(By.cssSelector(
-                    ".price, .product-price, .current-price, [class*='price'], .regular-price"));
-
-            if (priceElements.isEmpty()) {
-                System.out.println("   [CANH BAO] Khong tim thay gia tien tren trang nay.");
-                return;
-            }
-
             Set<String> checkedPrices = new HashSet<>();
             int validCount = 0;
             int errorCount = 0;
 
-            for (WebElement element : priceElements) {
-                try {
-                    String priceText = element.getText().trim();
-                    if (priceText.isEmpty() || checkedPrices.contains(priceText) || priceText.length() > 50)
-                        continue;
-                    checkedPrices.add(priceText);
+            // Use retry mechanism to handle stale elements
+            List<String> priceTexts = extractPricesWithRetry();
 
-                    // Su dung ham static de kiem tra
-                    CurrencyCheckResult result = validateCurrency(priceText, config);
+            if (priceTexts.isEmpty()) {
+                System.out.println("   [CANH BAO] Khong tim thay gia tien tren trang nay.");
+                return;
+            }
 
-                    if (result.isValid) {
-                        String displayPrice = toAsciiSafe(priceText);
-                        System.out
-                                .println("   [OK] Gia: " + displayPrice + " (ky hieu: " + result.detectedSymbol + ")");
-                        if (result.warningMessage != null) {
-                            System.out.println("        [CANH BAO] " + result.warningMessage);
-                        }
-                        validCount++;
-                    } else {
-                        String displayPrice = toAsciiSafe(priceText);
-                        System.out.println("   [LOI] Gia: " + displayPrice + " - " + result.errorMessage);
-                        errorCount++;
+            for (String priceText : priceTexts) {
+                if (priceText.isEmpty() || checkedPrices.contains(priceText) || priceText.length() > 50)
+                    continue;
+                checkedPrices.add(priceText);
+
+                // Su dung ham static de kiem tra
+                CurrencyCheckResult result = validateCurrency(priceText, config);
+
+                if (result.isValid) {
+                    String displayPrice = toAsciiSafe(priceText);
+                    System.out
+                            .println("   [OK] Gia: " + displayPrice + " (ky hieu: " + result.detectedSymbol + ")");
+                    if (result.warningMessage != null) {
+                        System.out.println("        [CANH BAO] " + result.warningMessage);
                     }
-
-                } catch (StaleElementReferenceException e) {
-                    // Element da thay doi, bo qua
+                    validCount++;
+                } else {
+                    String displayPrice = toAsciiSafe(priceText);
+                    System.out.println("   [LOI] Gia: " + displayPrice + " - " + result.errorMessage);
+                    errorCount++;
                 }
             }
 
@@ -281,30 +279,75 @@ public class CurrencyChecker {
     }
 
     /**
+     * Lay danh sach gia tien tu trang web voi co che retry
+     * 
+     * @return Danh sach chuoi gia tien
+     */
+    private List<String> extractPricesWithRetry() {
+        List<String> prices = new ArrayList<>();
+
+        for (int attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+            try {
+                prices.clear();
+                List<WebElement> priceElements = driver.findElements(By.cssSelector(
+                        ".price, .product-price, .current-price, [class*='price'], .regular-price"));
+
+                for (WebElement element : priceElements) {
+                    String priceText = getTextWithRetry(element);
+                    if (priceText != null && !priceText.isEmpty() && priceText.length() <= 50) {
+                        prices.add(priceText);
+                    }
+                }
+
+                // If we got prices successfully, return
+                if (!prices.isEmpty()) {
+                    return prices;
+                }
+
+            } catch (Exception e) {
+                System.out.println(
+                        "   [RETRY " + attempt + "/" + MAX_RETRY_ATTEMPTS + "] Loi lay gia tien: " + e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }
+        }
+
+        return prices;
+    }
+
+    /**
+     * Lay text tu element voi co che retry
+     * 
+     * @param element WebElement can lay text
+     * @return Text hoac null neu that bai sau tat ca lan retry
+     */
+    private String getTextWithRetry(WebElement element) {
+        for (int attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+            try {
+                return element.getText().trim();
+            } catch (StaleElementReferenceException e) {
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Lay danh sach gia tien tu trang web
      * 
      * @return Danh sach chuoi gia tien
      */
     public List<String> extractPricesFromPage() {
-        List<String> prices = new ArrayList<>();
-        try {
-            List<WebElement> priceElements = driver.findElements(By.cssSelector(
-                    ".price, .product-price, .current-price, [class*='price'], .regular-price"));
-
-            for (WebElement element : priceElements) {
-                try {
-                    String priceText = element.getText().trim();
-                    if (!priceText.isEmpty() && priceText.length() <= 50) {
-                        prices.add(priceText);
-                    }
-                } catch (StaleElementReferenceException e) {
-                    // Skip stale elements
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("   [LOI] Loi lay gia tien: " + e.getMessage());
-        }
-        return prices;
+        return extractPricesWithRetry();
     }
 
     /**
