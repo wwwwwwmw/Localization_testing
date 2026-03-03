@@ -1,16 +1,15 @@
-package org.example.strategy;
+package org.example.strategies;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Strategy cho ngôn ngữ tiếng Anh (English - US)
- * 
- * Đặc điểm:
- * - Currency: $1,234.56 (prefix, dot decimal, comma grouping)
- * - Date: MM/dd/yyyy
- * - Direction: LTR
- * - Script: Latin
+ * Strategy cho tiếng Anh (English - US).
+ *
+ * Currency: $1,234.56 (prefix, dot decimal, comma grouping)
+ * Date: MM/dd/yyyy
+ * Direction: LTR
+ * Phone: +1 (xxx) xxx-xxxx
  */
 public class EnglishStrategy implements ILocaleStrategy {
 
@@ -24,8 +23,7 @@ public class EnglishStrategy implements ILocaleStrategy {
         return "English";
     }
 
-    // ==================== CURRENCY FORMAT ====================
-
+    // — Currency —
     @Override
     public String getCurrencySymbol() {
         return "$";
@@ -33,24 +31,23 @@ public class EnglishStrategy implements ILocaleStrategy {
 
     @Override
     public boolean isCurrencySymbolPrefix() {
-        return true; // $100
+        return true;
     }
 
     @Override
     public String getDecimalSeparator() {
-        return "."; // 1.99
+        return ".";
     }
 
     @Override
     public String getGroupingSeparator() {
-        return ","; // 1,000
+        return ",";
     }
 
-    // ==================== DATE FORMAT ====================
-
+    // — Date —
     @Override
     public String getDatePattern() {
-        return "MM/dd/yyyy"; // US format
+        return "MM/dd/yyyy";
     }
 
     @Override
@@ -58,38 +55,25 @@ public class EnglishStrategy implements ILocaleStrategy {
         return List.of("MM/dd/yyyy", "M/d/yyyy", "yyyy-MM-dd");
     }
 
-    // ==================== LAYOUT & DIRECTION ====================
-
+    // — Layout —
     @Override
     public boolean isRTL() {
         return false;
     }
 
-    // ==================== UNTRANSLATED CONTENT ====================
-
+    // — Untranslated —
     @Override
     public List<String> getForbiddenWords() {
-        // Tiếng Anh là ngôn ngữ gốc, không có từ cấm
         return Collections.emptyList();
     }
 
     @Override
     public List<String> getExpectedKeywords() {
-        return List.of(
-                "Add to cart",
-                "Sign in",
-                "Search",
-                "Home",
-                "Clothes",
-                "Accessories",
-                "Art",
-                "Price",
-                "Contact us",
-                "Cart");
+        return List.of("Add to cart", "Sign in", "Search", "Home",
+                "Clothes", "Accessories", "Art", "Price", "Contact us", "Cart");
     }
 
-    // ==================== ENCODING & FONTS ====================
-
+    // — Encoding —
     @Override
     public ScriptGroup getScriptGroup() {
         return ScriptGroup.LATIN;
@@ -103,5 +87,11 @@ public class EnglishStrategy implements ILocaleStrategy {
     @Override
     public String getCharacterValidationPattern() {
         return "[a-zA-Z]+";
+    }
+
+    // — Phone —
+    @Override
+    public String getPhoneRegex() {
+        return "\\+?1?[\\s.-]?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}";
     }
 }

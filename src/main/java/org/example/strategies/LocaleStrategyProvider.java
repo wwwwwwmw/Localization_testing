@@ -1,24 +1,23 @@
-package org.example.strategy;
+package org.example.strategies;
 
 import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Factory/Provider để cung cấp các LocaleStrategy cho JUnit 5 @MethodSource
- * 
+ * Factory / Provider cung cấp ILocaleStrategy cho JUnit 5 Data Provider.
+ *
  * Sử dụng:
- * - @MethodSource("org.example.strategy.LocaleStrategyProvider#getAllStrategies")
- * - @EnumSource(LocaleStrategyProvider.SupportedLocale.class)
+ * @MethodSource("org.example.strategies.LocaleStrategyProvider#allStrategies")
+ * @EnumSource(LocaleStrategyProvider.SupportedLocale.class)
  */
 public final class LocaleStrategyProvider {
 
     private LocaleStrategyProvider() {
-        // Utility class - không cho phép tạo instance
     }
 
     /**
-     * Enum liệt kê các locale được hỗ trợ
-     * Sử dụng với @EnumSource trong JUnit 5
+     * Enum liệt kê các locale được hỗ trợ.
+     * Dùng với @EnumSource trong JUnit 5.
      */
     public enum SupportedLocale {
         ENGLISH("en", new EnglishStrategy()),
@@ -48,10 +47,10 @@ public final class LocaleStrategyProvider {
         }
     }
 
-    /**
-     * Cung cấp stream các strategy cho @MethodSource
-     */
-    public static Stream<ILocaleStrategy> getAllStrategies() {
+    // ==================== STREAM PROVIDERS ====================
+
+    /** Stream tất cả strategy - dùng cho @MethodSource */
+    public static Stream<ILocaleStrategy> allStrategies() {
         return Stream.of(
                 new EnglishStrategy(),
                 new FrenchStrategy(),
@@ -59,16 +58,14 @@ public final class LocaleStrategyProvider {
                 new ArabicStrategy());
     }
 
-    /**
-     * Cung cấp stream các enum SupportedLocale cho @MethodSource
-     */
-    public static Stream<SupportedLocale> getAllLocales() {
+    /** Stream tất cả SupportedLocale enum */
+    public static Stream<SupportedLocale> allLocales() {
         return Stream.of(SupportedLocale.values());
     }
 
-    /**
-     * Lấy strategy theo mã ngôn ngữ
-     */
+    // ==================== LOOKUP ====================
+
+    /** Lấy strategy theo mã ngôn ngữ */
     public static ILocaleStrategy getStrategy(String languageCode) {
         for (SupportedLocale locale : SupportedLocale.values()) {
             if (locale.getCode().equals(languageCode)) {
@@ -78,26 +75,21 @@ public final class LocaleStrategyProvider {
         throw new IllegalArgumentException("Unsupported language code: " + languageCode);
     }
 
-    /**
-     * Lấy danh sách tất cả các strategy
-     */
-    public static List<ILocaleStrategy> getStrategiesList() {
+    /** Kiểm tra ngôn ngữ có được hỗ trợ không */
+    public static boolean isSupported(String languageCode) {
+        for (SupportedLocale locale : SupportedLocale.values()) {
+            if (locale.getCode().equals(languageCode))
+                return true;
+        }
+        return false;
+    }
+
+    /** Lấy danh sách tất cả strategy */
+    public static List<ILocaleStrategy> getAll() {
         return List.of(
                 new EnglishStrategy(),
                 new FrenchStrategy(),
                 new VietnameseStrategy(),
                 new ArabicStrategy());
-    }
-
-    /**
-     * Kiểm tra xem ngôn ngữ có được hỗ trợ không
-     */
-    public static boolean isSupported(String languageCode) {
-        for (SupportedLocale locale : SupportedLocale.values()) {
-            if (locale.getCode().equals(languageCode)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
