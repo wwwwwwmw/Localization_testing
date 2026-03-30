@@ -71,6 +71,13 @@ public interface ILocaleStrategy {
     /** Từ tiếng Anh KHÔNG được phép xuất hiện (kiểm tra sót dịch) */
     List<String> getForbiddenWords();
 
+    /**
+     * Từ tiếng Anh được phép giữ nguyên theo UX/brand cho locale hiện tại.
+     */
+    default List<String> getAllowedEnglishWords() {
+        return List.of();
+    }
+
     /** Từ khóa mong đợi xuất hiện trên trang (đã dịch) */
     List<String> getExpectedKeywords();
 

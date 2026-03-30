@@ -83,6 +83,11 @@ public class VietnameseStrategy implements ILocaleStrategy {
     }
 
     @Override
+    public List<String> getAllowedEnglishWords() {
+        return List.of("Sale", "Menu", "Hot");
+    }
+
+    @Override
     public List<String> getExpectedKeywords() {
         return List.of("Thêm vào giỏ", "Đăng nhập", "Tìm kiếm", "Trang chủ",
                 "Quần áo", "Phụ kiện", "Nghệ thuật", "Giá", "Liên hệ", "Giỏ hàng");

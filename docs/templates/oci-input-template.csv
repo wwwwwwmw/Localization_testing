@@ -1,0 +1,2 @@
+runId,localeTarget,localeCovered,featureTarget,featureCovered,methodTarget,methodCovered,riskWeightTotal,riskWeightCovered,boundaryTarget,boundaryCovered,autoTarget,autoCovered
+run-001,4,4,20,18,12,10,100,88,16,12,60,45

@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * MainLocalizationTest — 5 chức năng kiểm tra L10n chính.
+ * MainLocalizationTest — 6 chức năng kiểm tra L10n chính.
  *
  * <ol>
  * <li>💰 Currency Format — kiểm tra tiền tệ cho từng ngôn ngữ</li>
@@ -20,13 +20,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * <li>📅 Date Format — kiểm tra định dạng ngày tháng</li>
  * <li>↔️ Layout Direction — kiểm tra RTL/LTR</li>
  * <li>📦 Text Overflow — kiểm tra tràn text</li>
+ * <li>🔤 Charset — kiểm tra charset/encoding và ký tự locale</li>
  * </ol>
  *
- * Mỗi test được parameterize qua 4 ngôn ngữ: EN, FR, VI, AR.
+ * Mỗi test được parameterize qua 7 ngôn ngữ: EN, FR, VI, DE, JA, RU, AR.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@DisplayName("🌍 Localization Test Suite — PrestaShop Demo")
+@DisplayName("🌍 Localization Test Suite — Shop Under Test")
 public class MainLocalizationTest extends BaseTest {
 
     /** Theo dõi ngôn ngữ hiện tại để tránh switch lại không cần thiết */
@@ -38,14 +39,16 @@ public class MainLocalizationTest extends BaseTest {
      */
     private void ensureLanguage(ILocaleStrategy strategy) {
         String code = strategy.getLanguageCode();
-        if (!code.equals(currentLanguage)) {
+        String actualUiCode = page.getCurrentLanguageCode();
+        boolean needSwitch = !code.equals(currentLanguage) || !code.equals(actualUiCode);
+        if (needSwitch) {
             boolean success = page.switchLanguage(code);
-            if (success) {
-                currentLanguage = code;
-            } else if (!"en".equals(code)) {
-                Assumptions.assumeTrue(false,
-                        "Không thể chuyển sang " + strategy.getLanguageName() + " — bỏ qua");
-            }
+            assertTrue(success,
+                    "Không thể chuyển sang ngôn ngữ " + strategy.getLanguageName() + " (" + code + ")");
+            String verifiedUiCode = page.getCurrentLanguageCode();
+            assertTrue(code.equals(verifiedUiCode),
+                    "UI đang ở ngôn ngữ " + verifiedUiCode + " thay vì " + code);
+            currentLanguage = code;
         }
     }
 
@@ -140,5 +143,62 @@ public class MainLocalizationTest extends BaseTest {
         List<L10nError> errors = validator.validateTextOverflow(page, strategy);
 
         assertNoErrors(errors, "Text Overflow — " + strategy.getLanguageName());
+    }
+
+    // ==================== TEST 6: CHARSET ====================
+
+    @Order(6)
+    @DisplayName("🔤 Charset")
+    @ParameterizedTest(name = "[{0}] Charset")
+    @EnumSource(SupportedLocale.class)
+    void test06_Charset(SupportedLocale locale) {
+        ILocaleStrategy strategy = locale.getStrategy();
+        ensureLanguage(strategy);
+
+        List<L10nError> errors = validator.validateCharset(page, strategy);
+
+        assertNoErrors(errors, "Charset — " + strategy.getLanguageName());
+    }
+
+    // ==================== TEST 7: NUMBER & MEASUREMENT ====================
+
+    @Order(7)
+    @DisplayName("🔢 Number & Measurement Format")
+    @ParameterizedTest(name = "[{0}] Number & Measurement")
+    @EnumSource(SupportedLocale.class)
+    void test07_NumberAndMeasurementFormat(SupportedLocale locale) {
+        ILocaleStrategy strategy = locale.getStrategy();
+        ensureLanguage(strategy);
+
+        List<L10nError> errors = validator.validateNumberAndMeasurementFormat(page, strategy);
+        assertNoErrors(errors, "Number & Measurement — " + strategy.getLanguageName());
+    }
+
+    // ==================== TEST 8: MEDIA LOCALIZATION ====================
+
+    @Order(8)
+    @DisplayName("🖼 Media & Alt Text Localization")
+    @ParameterizedTest(name = "[{0}] Media & Alt Text")
+    @EnumSource(SupportedLocale.class)
+    void test08_MediaAndAltText(SupportedLocale locale) {
+        ILocaleStrategy strategy = locale.getStrategy();
+        ensureLanguage(strategy);
+
+        List<L10nError> errors = validator.validateMediaLocalization(page, strategy);
+        assertNoErrors(errors, "Media & Alt Text — " + strategy.getLanguageName());
+    }
+
+    // ==================== TEST 9: URL LOCALIZATION ====================
+
+    @Order(9)
+    @DisplayName("🔗 URL & Routing Localization")
+    @ParameterizedTest(name = "[{0}] URL Routing")
+    @EnumSource(SupportedLocale.class)
+    void test09_UrlRoutingLocalization(SupportedLocale locale) {
+        ILocaleStrategy strategy = locale.getStrategy();
+        ensureLanguage(strategy);
+
+        List<L10nError> errors = validator.validateLocalizedUrls(page, strategy);
+        assertNoErrors(errors, "URL & Routing — " + strategy.getLanguageName());
     }
 }

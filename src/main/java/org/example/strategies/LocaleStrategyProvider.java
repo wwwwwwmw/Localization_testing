@@ -23,6 +23,9 @@ public final class LocaleStrategyProvider {
         ENGLISH("en", new EnglishStrategy()),
         FRENCH("fr", new FrenchStrategy()),
         VIETNAMESE("vi", new VietnameseStrategy()),
+        GERMAN("de", new GermanStrategy()),
+        JAPANESE("ja", new JapaneseStrategy()),
+        RUSSIAN("ru", new RussianStrategy()),
         ARABIC("ar", new ArabicStrategy());
 
         private final String code;
@@ -55,6 +58,9 @@ public final class LocaleStrategyProvider {
                 new EnglishStrategy(),
                 new FrenchStrategy(),
                 new VietnameseStrategy(),
+                new GermanStrategy(),
+                new JapaneseStrategy(),
+                new RussianStrategy(),
                 new ArabicStrategy());
     }
 
@@ -90,6 +96,9 @@ public final class LocaleStrategyProvider {
                 new EnglishStrategy(),
                 new FrenchStrategy(),
                 new VietnameseStrategy(),
+                new GermanStrategy(),
+                new JapaneseStrategy(),
+                new RussianStrategy(),
                 new ArabicStrategy());
     }
 }

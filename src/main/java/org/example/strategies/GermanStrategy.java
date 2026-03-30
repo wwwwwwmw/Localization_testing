@@ -3,29 +3,28 @@ package org.example.strategies;
 import java.util.List;
 
 /**
- * Strategy cho tiếng Pháp (Français).
- *
- * Currency: 1 234,56 € (suffix, comma decimal, space grouping)
- * Date: dd/MM/yyyy
- * Direction: LTR
- * Phone: +33 x xx xx xx xx
+ * Strategy for German (Deutsch).
  */
-public class FrenchStrategy implements ILocaleStrategy {
+public class GermanStrategy implements ILocaleStrategy {
 
     @Override
     public String getLanguageCode() {
-        return "fr";
+        return "de";
     }
 
     @Override
     public String getLanguageName() {
-        return "Français";
+        return "Deutsch";
     }
 
-    // — Currency —
     @Override
     public String getCurrencySymbol() {
         return "€";
+    }
+
+    @Override
+    public List<String> getAcceptedCurrencySymbols() {
+        return List.of("€", "EUR");
     }
 
     @Override
@@ -40,33 +39,28 @@ public class FrenchStrategy implements ILocaleStrategy {
 
     @Override
     public String getGroupingSeparator() {
-        return " ";
+        return ".";
     }
 
-    // — Date —
     @Override
     public String getDatePattern() {
-        return "dd/MM/yyyy";
+        return "dd.MM.yyyy";
     }
 
     @Override
     public List<String> getAcceptedDatePatterns() {
-        return List.of("dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy");
+        return List.of("dd.MM.yyyy", "d.M.yyyy", "dd/MM/yyyy", "yyyy-MM-dd");
     }
 
-    // — Layout —
     @Override
     public boolean isRTL() {
         return false;
     }
 
-    // — Untranslated —
     @Override
     public List<String> getForbiddenWords() {
-        return List.of("Add to cart", "Sign in", "My account", "Search our catalog",
-                "Contact us", "About us", "Create account", "Checkout", "Cart",
-                "Quick view", "Add to wishlist", "Free shipping", "Discount",
-                "New products", "Best sales");
+        return List.of(
+                "Add to cart", "Sign in", "Search", "Home", "Contact us", "Cart");
     }
 
     @Override
@@ -76,11 +70,10 @@ public class FrenchStrategy implements ILocaleStrategy {
 
     @Override
     public List<String> getExpectedKeywords() {
-        return List.of("Ajouter au panier", "Connexion", "Rechercher", "Accueil",
-                "Vêtements", "Accessoires", "Art", "Prix", "Contactez-nous", "Panier");
+        return List.of(
+                "In den Warenkorb", "Anmelden", "Suche", "Startseite", "Kontakt", "Warenkorb");
     }
 
-    // — Encoding —
     @Override
     public ScriptGroup getScriptGroup() {
         return ScriptGroup.LATIN;
@@ -88,17 +81,16 @@ public class FrenchStrategy implements ILocaleStrategy {
 
     @Override
     public String getCharacterSample() {
-        return "àâäéèêëïîôùûüçœæ";
+        return "äöüÄÖÜß";
     }
 
     @Override
     public String getCharacterValidationPattern() {
-        return "[a-zA-ZàâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇŒÆ]+";
+        return "[a-zA-ZäöüÄÖÜß]+";
     }
 
-    // — Phone —
     @Override
     public String getPhoneRegex() {
-        return "\\+?33[\\s.-]?[1-9]([\\s.-]?\\d{2}){4}";
+        return "\\+?49[\\s.-]?\\d{2,5}[\\s.-]?\\d{3,8}";
     }
 }

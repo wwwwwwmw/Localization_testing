@@ -5,6 +5,8 @@ import org.example.core.L10nError;
 import org.example.core.L10nValidator;
 import org.example.pages.PrestaShopPage;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.List;
 
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Cung cấp helper assertion
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.SAME_THREAD)
 public abstract class BaseTest {
 
     // Đặt false để hiển thị trình duyệt, true để chạy headless
@@ -34,7 +37,7 @@ public abstract class BaseTest {
     @BeforeAll
     void setUpOnce() {
         System.out.println("╔══════════════════════════════════════════════════════════╗");
-        System.out.println("║       L10N TEST SUITE — PrestaShop Demo                  ║");
+        System.out.println("║       L10N TEST SUITE — Shop Under Test                  ║");
         System.out.println("╚══════════════════════════════════════════════════════════╝");
 
         driverManager = new DriverManager();
@@ -78,8 +81,20 @@ public abstract class BaseTest {
         if (!errors.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             sb.append("Tìm thấy ").append(errors.size()).append(" lỗi L10n cho ").append(context).append(":\n");
-            for (L10nError err : errors) {
-                sb.append("  • ").append(err).append("\n");
+            for (int i = 0; i < errors.size(); i++) {
+                L10nError err = errors.get(i);
+                sb.append("  ").append(i + 1).append(") ")
+                        .append("[severity=").append(err.getSeverity())
+                        .append("][type=").append(err.getType())
+                        .append("][lang=").append(err.getLanguageCode())
+                        .append("] ").append(err.getMessage()).append("\n")
+                        .append("     page=").append(err.getPageUrl()).append("\n")
+                        .append("     time=").append(err.getTimestamp());
+
+                if (err.hasScreenshot()) {
+                    sb.append("\n     screenshot=").append(err.getScreenshotPath());
+                }
+                sb.append("\n");
             }
             fail(sb.toString());
         }
@@ -93,8 +108,18 @@ public abstract class BaseTest {
             StringBuilder sb = new StringBuilder();
             sb.append("Quá nhiều lỗi L10n (").append(errors.size())
                     .append(" > ").append(maxAllowed).append(") cho ").append(context).append(":\n");
-            for (L10nError err : errors) {
-                sb.append("  • ").append(err).append("\n");
+            for (int i = 0; i < errors.size(); i++) {
+                L10nError err = errors.get(i);
+                sb.append("  ").append(i + 1).append(") ")
+                        .append("[severity=").append(err.getSeverity())
+                        .append("][type=").append(err.getType())
+                        .append("][lang=").append(err.getLanguageCode())
+                        .append("] ").append(err.getMessage()).append("\n")
+                        .append("     page=").append(err.getPageUrl());
+                if (err.hasScreenshot()) {
+                    sb.append("\n     screenshot=").append(err.getScreenshotPath());
+                }
+                sb.append("\n");
             }
             fail(sb.toString());
         }

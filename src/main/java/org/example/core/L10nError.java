@@ -61,6 +61,7 @@ public class L10nError {
             case "UNTRANSLATED_TEXT":
             case "DATE_FORMAT":
             case "TEXT_OVERFLOW":
+            case "CHARSET":
                 return ErrorSeverity.HIGH;
             case "RTL_LAYOUT":
                 return ErrorSeverity.HIGH;
