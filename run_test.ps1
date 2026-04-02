@@ -4,7 +4,7 @@ param(
     [switch]$auto
 )
 
-$validLangs = @("en", "fr", "de", "es", "it", "pl", "pt")
+$validLangs = @("en", "fr", "vi", "de", "ja", "ru", "ar")
 
 if ($lang -notin $validLangs) {
     Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
@@ -14,11 +14,11 @@ if ($lang -notin $validLangs) {
     Write-Host "Các ngôn ngữ hỗ trợ:" -ForegroundColor Green
     Write-Host "  en - English"
     Write-Host "  fr - Français"
+    Write-Host "  vi - Tiếng Việt"
     Write-Host "  de - Deutsch"
-    Write-Host "  es - Español"
-    Write-Host "  it - Italiano"
-    Write-Host "  pl - Polski"
-    Write-Host "  pt - Português"
+    Write-Host "  ja - 日本語"
+    Write-Host "  ru - Русский"
+    Write-Host "  ar - العربية"
     Write-Host ""
     Write-Host "Cách sử dụng:" -ForegroundColor Green
     Write-Host "  .\run_test.ps1 -lang fr          # Test tiếng Pháp (manual)"

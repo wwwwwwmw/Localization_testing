@@ -11,13 +11,16 @@ import java.util.stream.Collectors;
 /**
  * L10nValidator - Logic kiem tra Localization cho shop dang duoc test.
  *
- * 6 tiêu chí kiểm tra:
+ * 9 tiêu chí kiểm tra:
  * 1. Currency Format — ký hiệu tiền tệ, vị trí (prefix/suffix), dấu phân cách
  * 2. Untranslated Text — phát hiện TOÀN BỘ text tiếng Anh chưa dịch
  * 3. Date Format — định dạng ngày tháng, tên tháng tiếng Anh sót
  * 4. Layout Direction — RTL (Arabic) / LTR (các ngôn ngữ khác)
  * 5. Text Overflow — UI bị tràn text
  * 6. Charset — khai báo UTF-8, phát hiện mojibake, kiểm tra script đặc trưng
+ * 7. Number & Measurement — phân cách số, đơn vị đo, rò rỉ chuẩn tiếng Anh
+ * 8. Media Localization — ảnh/asset và alt text theo locale
+ * 9. URL Localization — path/query phản ánh locale đúng chuẩn
  */
 public class L10nValidator {
 

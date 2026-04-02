@@ -45,13 +45,13 @@ Sau đó chọn ngôn ngữ và chế độ quét.
 |----|----------|---------|---------------|
 | `en` | English | £/$/€ | . |
 | `fr` | Français | € | , |
+| `vi` | Tiếng Việt | ₫ | , |
 | `de` | Deutsch | € | , |
-| `es` | Español | € | , |
-| `it` | Italiano | € | , |
-| `pl` | Polski | zł/€ | , |
-| `pt` | Português | € | , |
+| `ja` | 日本語 | ¥ | . |
+| `ru` | Русский | ₽ | , |
+| `ar` | العربية | ر.س | . |
 
-## Các chức năng kiểm tra:
+## Các module kiểm tra:
 
 1. **💰 Tiền tệ**: 
    - Kiểm tra ký hiệu tiền tệ phù hợp với locale
@@ -65,12 +65,28 @@ Sau đó chọn ngôn ngữ và chế độ quét.
    - Kiểm tra định dạng ngày phù hợp với locale
    - DD/MM/YYYY hoặc DD.MM.YYYY tùy ngôn ngữ
 
-4. **🔤 Encoding**:
-   - Phát hiện các ký tự bị lỗi encoding (Ã, â€, etc.)
+4. **↔️ Hướng bố cục (RTL/LTR)**:
+   - Kiểm tra `dir="rtl"` cho Arabic
+   - Kiểm tra locale LTR không bị áp sai RTL
 
 5. **📐 UI Overflow**:
    - Kiểm tra nút bấm có text quá dài
    - Phát hiện khả năng vỡ layout
+
+6. **🔤 Encoding/Charset**:
+   - Phát hiện các ký tự bị lỗi encoding (Ã, â€, etc.)
+
+7. **🔢 Number & Measurement**:
+   - Kiểm tra định dạng số theo locale
+   - Phát hiện rò rỉ đơn vị đo không đúng ngôn ngữ
+
+8. **🖼 Media & Alt Text**:
+   - Kiểm tra alt text được địa phương hóa
+   - Kiểm tra asset/media không bị rò rỉ locale sai
+
+9. **🔗 URL & Routing Localization**:
+   - Kiểm tra URL phản ánh locale đúng chuẩn
+   - Phát hiện route/path không nhất quán theo ngôn ngữ
 
 ## Kết quả test:
 - **Screenshots lỗi**: `./screenshots/` 

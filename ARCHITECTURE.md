@@ -8,15 +8,18 @@ Dự án này áp dụng **Data-Driven Testing** kết hợp **Strategy Pattern*
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    LocalizationTest.java                        │
+│                  MainLocalizationTest.java                       │
 │           (Generic Test Suite - JUnit 5 @ParameterizedTest)     │
 ├─────────────────────────────────────────────────────────────────┤
-│  test01_CurrencyFormat()     → Kiểm tra định dạng tiền tệ      │
-│  test02_DateFormat()         → Kiểm tra định dạng ngày tháng   │
-│  test03_LayoutDirection()    → Kiểm tra RTL/LTR                │
-│  test04_TextOverflow()       → Kiểm tra tràn khung UI          │
-│  test05_UntranslatedText()   → Kiểm tra từ chưa dịch           │
-│  test06_CharacterEncoding()  → Kiểm tra bảng mã ký tự          │
+│  test01_CurrencyFormat()          → Kiểm tra định dạng tiền tệ │
+│  test02_UntranslatedText()        → Kiểm tra text chưa dịch    │
+│  test03_DateFormat()              → Kiểm tra định dạng ngày    │
+│  test04_LayoutDirection()         → Kiểm tra RTL/LTR           │
+│  test05_TextOverflow()            → Kiểm tra tràn khung UI     │
+│  test06_Charset()                 → Kiểm tra bảng mã ký tự     │
+│  test07_NumberAndMeasurement()    → Kiểm tra số + đơn vị đo    │
+│  test08_MediaAndAltText()         → Kiểm tra media + alt text  │
+│  test09_UrlRoutingLocalization()  → Kiểm tra URL theo locale   │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
                     @EnumSource(SupportedLocale.class)
@@ -42,7 +45,7 @@ Dự án này áp dụng **Data-Driven Testing** kết hợp **Strategy Pattern*
 ```
 src/
 ├── main/java/org/example/
-│   ├── strategy/                    # Strategy Pattern classes
+│   ├── strategies/                  # Strategy Pattern classes
 │   │   ├── ILocaleStrategy.java     # Interface định nghĩa quy tắc L10n
 │   │   ├── LocaleStrategyProvider.java # Factory/Provider cho JUnit 5
 │   │   ├── EnglishStrategy.java     # Quy tắc cho tiếng Anh
@@ -50,15 +53,13 @@ src/
 │   │   ├── VietnameseStrategy.java  # Quy tắc cho tiếng Việt
 │   │   └── ArabicStrategy.java      # Quy tắc cho tiếng Ả Rập (RTL)
 │   │
-│   ├── CurrencyChecker.java         # Utility kiểm tra tiền tệ
-│   ├── DateChecker.java             # Utility kiểm tra ngày tháng
-│   ├── TextChecker.java             # Utility kiểm tra text
+│   ├── core/L10nValidator.java      # 9 module kiểm tra L10n
+│   ├── pages/PrestaShopPage.java    # Page Object thao tác UI
 │   └── L10nError.java               # Model lưu thông tin lỗi
 │
 └── test/java/org/example/
-    ├── LocalizationTest.java        # ⭐ Generic Test Suite (JUnit 5)
-    ├── FourLanguagesL10nTest.java   # Legacy tests (JUnit 4)
-    └── LocalizationUnitTest.java    # Unit tests
+    ├── MainLocalizationTest.java    # ⭐ Generic Test Suite (JUnit 5)
+    └── BaseTest.java                # Setup/teardown test runtime
 ```
 
 ## 🚀 Chạy Tests
@@ -68,9 +69,9 @@ src/
 ./mvnw test
 ```
 
-### Chạy chỉ LocalizationTest (JUnit 5)
+### Chạy chỉ MainLocalizationTest (JUnit 5)
 ```bash
-./mvnw test -Dtest=LocalizationTest
+./mvnw test -Dtest=MainLocalizationTest
 ```
 
 ### Chạy với report chi tiết
@@ -78,16 +79,19 @@ src/
 ./mvnw test -Dsurefire.useFile=false
 ```
 
-## 📋 6 Test Cases Cốt Lõi
+## 📋 9 Module Test Cốt Lõi
 
 | Test | Mục đích | Checkpoints |
 |------|----------|-------------|
-| **TEST 01: Currency Format** | Kiểm tra định dạng tiền tệ | Symbol ($, €, ₫), Position (Prefix/Suffix), Decimal Separator, Grouping |
-| **TEST 02: Date Format** | Kiểm tra định dạng ngày | Pattern (dd/MM/yyyy vs MM/dd/yyyy), Dịch tên tháng |
-| **TEST 03: Layout Direction** | Kiểm tra hướng trang | `dir="rtl"` cho Arabic, Text alignment |
-| **TEST 04: Text Overflow** | Phát hiện vỡ giao diện | scrollWidth > offsetWidth, Truncation "..." |
-| **TEST 05: Untranslated Text** | Tìm text chưa dịch | Từ tiếng Anh còn sót (Add to cart, Sign in...) |
-| **TEST 06: Encoding** | Kiểm tra bảng mã | Ký tự đặc biệt (ư, ê, é, العربية), Broken encoding |
+| **TEST 01: Currency Format** | Kiểm tra định dạng tiền tệ | Symbol, Position (Prefix/Suffix), Decimal Separator, Grouping |
+| **TEST 02: Untranslated Text** | Tìm text chưa dịch | Từ tiếng Anh còn sót theo ngữ cảnh UI |
+| **TEST 03: Date Format** | Kiểm tra định dạng ngày | Pattern theo locale, rò rỉ tháng tiếng Anh |
+| **TEST 04: Layout Direction** | Kiểm tra hướng trang | `dir="rtl"` cho Arabic, locale LTR không bị áp RTL |
+| **TEST 05: Text Overflow** | Phát hiện vỡ giao diện | scrollWidth > offsetWidth, truncation bất thường |
+| **TEST 06: Charset** | Kiểm tra bảng mã | UTF-8, ký tự đặc trưng locale, mojibake |
+| **TEST 07: Number & Measurement** | Kiểm tra số và đơn vị đo | Dấu phân tách, đơn vị đo không bị rò rỉ tiếng Anh |
+| **TEST 08: Media & Alt Text** | Kiểm tra media theo locale | Alt text đầy đủ, asset không sai locale |
+| **TEST 09: URL & Routing** | Kiểm tra URL theo locale | Path/query phản ánh locale nhất quán |
 
 ## 🔧 Cách Thêm Ngôn Ngữ Mới
 
@@ -143,15 +147,16 @@ public enum SupportedLocale {
     ENGLISH("en", new EnglishStrategy()),
     FRENCH("fr", new FrenchStrategy()),
     VIETNAMESE("vi", new VietnameseStrategy()),
-    ARABIC("ar", new ArabicStrategy()),
-    GERMAN("de", new GermanStrategy());  // ← Thêm dòng này
-    // ...
+    GERMAN("de", new GermanStrategy()),
+    JAPANESE("ja", new JapaneseStrategy()),
+    RUSSIAN("ru", new RussianStrategy()),
+    ARABIC("ar", new ArabicStrategy());
 }
 ```
 
 ### Bước 3: Chạy lại tests
 ```bash
-./mvnw test -Dtest=LocalizationTest
+./mvnw test -Dtest=MainLocalizationTest
 ```
 
 ## ⚡ Tối Ưu Hiệu Năng
@@ -164,17 +169,17 @@ public enum SupportedLocale {
 | **Explicit Wait** | Không dùng Thread.sleep, dùng WebDriverWait |
 | **assertAll()** | Gom nhiều assertions, báo cáo tất cả lỗi 1 lần |
 
-## 📊 Quy Tắc L10n Cho 4 Ngôn Ngữ
+## 📊 Quy Tắc L10n Cho 7 Ngôn Ngữ
 
-| Aspect | EN (English) | FR (Français) | VI (Tiếng Việt) | AR (العربية) |
-|--------|--------------|---------------|-----------------|--------------|
-| **Currency Symbol** | $ | € | ₫ | ر.س |
-| **Symbol Position** | Prefix ($100) | Suffix (100 €) | Suffix (100.000 ₫) | Suffix |
-| **Decimal Sep** | . (dot) | , (comma) | , (comma) | . (dot) |
-| **Grouping Sep** | , (comma) | (space) | . (dot) | , (comma) |
-| **Date Pattern** | MM/dd/yyyy | dd/MM/yyyy | dd/MM/yyyy | dd/MM/yyyy |
-| **Direction** | LTR | LTR | LTR | **RTL** ⚠️ |
-| **Script** | Latin | Latin+diacritics | Latin+diacritics | Arabic |
+| Aspect | EN | FR | VI | DE | JA | RU | AR |
+|--------|----|----|----|----|----|----|----|
+| **Currency Symbol** | $/£/€ | € | ₫ | € | ¥ | ₽ | ر.س |
+| **Symbol Position** | Prefix/Suffix | Suffix | Suffix | Suffix | Prefix | Suffix | Suffix |
+| **Decimal Sep** | . | , | , | , | . | , | . |
+| **Grouping Sep** | , | space | . | . | , | space | , |
+| **Date Pattern** | M/d/yyyy | dd/MM/yyyy | d/M/yyyy | d.M.yyyy | yyyy/M/d | dd.MM.yyyy | d/M/yyyy |
+| **Direction** | LTR | LTR | LTR | LTR | LTR | LTR | **RTL** |
+| **Script** | Latin | Latin | Latin | Latin | Japanese | Cyrillic | Arabic |
 
 ## 🐛 Troubleshooting
 

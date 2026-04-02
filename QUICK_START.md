@@ -59,25 +59,28 @@ Khi chương trình chạy, bạn sẽ thấy menu:
 - **Log file**: `./screenshots/l10n_test_[timestamp].log`
 - **Báo cáo**: `./screenshots/report_[lang]_[timestamp].txt`
 
-## Các loại lỗi phát hiện
+## 9 module test hiện tại
 
-| Mã lỗi | Ý nghĩa |
-|--------|---------|
-| CURRENCY_SYMBOL | Ký hiệu tiền tệ sai |
-| DECIMAL_SEPARATOR | Dấu phân cách thập phân sai |
-| UNTRANSLATED_TEXT | Văn bản chưa dịch |
-| DATE_FORMAT | Định dạng ngày sai |
-| ENCODING | Lỗi encoding ký tự |
-| UI_OVERFLOW | Text quá dài gây vỡ layout |
+| Module | Mục tiêu |
+|--------|----------|
+| Currency Format | Ký hiệu tiền tệ, vị trí, dấu phân cách |
+| Untranslated Text | Phát hiện text tiếng Anh chưa dịch |
+| Date Format | Kiểm tra format ngày theo locale |
+| Layout Direction | Kiểm tra LTR/RTL theo ngôn ngữ |
+| Text Overflow | Phát hiện tràn chữ vỡ layout |
+| Charset | Phát hiện lỗi encoding/mojibake |
+| Number & Measurement | Kiểm tra định dạng số và đơn vị đo |
+| Media & Alt Text | Kiểm tra alt text và media theo locale |
+| URL & Routing | Kiểm tra URL phản ánh locale |
 
 ## Ngôn ngữ hỗ trợ
 - en (English)
 - fr (Français)
+- vi (Tiếng Việt)
 - de (Deutsch)
-- es (Español)
-- it (Italiano)
-- pl (Polski)
-- pt (Português)
+- ja (日本語)
+- ru (Русский)
+- ar (العربية)
 
 ## Lưu ý
 - Trang PrestaShop demo nằm trong iframe, chương trình tự động xử lý

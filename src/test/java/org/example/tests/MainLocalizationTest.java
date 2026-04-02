@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * MainLocalizationTest — 6 chức năng kiểm tra L10n chính.
+ * MainLocalizationTest — 9 module kiểm tra L10n chính.
  *
  * <ol>
  * <li>💰 Currency Format — kiểm tra tiền tệ cho từng ngôn ngữ</li>

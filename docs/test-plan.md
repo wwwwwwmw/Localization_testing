@@ -30,8 +30,7 @@
 - Regression test: bo test co dinh cho cac locale chinh.
 
 ## 5. Nhom locale uu tien
-- Nhom A (bat buoc): en, fr, vi, ar.
-- Nhom B (mo rong): de, es, it, pl, pt.
+- Nhom A (bat buoc): en, fr, vi, de, ja, ru, ar.
 
 ## 6. Tieu chi vao/ra
 ### Entry criteria

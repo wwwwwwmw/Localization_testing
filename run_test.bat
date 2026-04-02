@@ -7,21 +7,21 @@ echo.
 echo Chọn ngôn ngữ để test:
 echo   1. English (en)
 echo   2. Français (fr)
-echo   3. Deutsch (de)
-echo   4. Español (es)
-echo   5. Italiano (it)
-echo   6. Polski (pl)
-echo   7. Português (pt)
+echo   3. Tiếng Việt (vi)
+echo   4. Deutsch (de)
+echo   5. 日本語 (ja)
+echo   6. Русский (ru)
+echo   7. العربية (ar)
 echo.
 set /p choice="Nhập số (1-7): "
 
 if "%choice%"=="1" set lang=en
 if "%choice%"=="2" set lang=fr
-if "%choice%"=="3" set lang=de
-if "%choice%"=="4" set lang=es
-if "%choice%"=="5" set lang=it
-if "%choice%"=="6" set lang=pl
-if "%choice%"=="7" set lang=pt
+if "%choice%"=="3" set lang=vi
+if "%choice%"=="4" set lang=de
+if "%choice%"=="5" set lang=ja
+if "%choice%"=="6" set lang=ru
+if "%choice%"=="7" set lang=ar
 
 if not defined lang (
     echo Lựa chọn không hợp lệ!
